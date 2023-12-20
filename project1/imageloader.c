@@ -148,7 +148,7 @@ void freeImage(Image *image)
 	free(image);
 }
 
-static void allocation_failed()
+void allocation_failed()
 {
 	fprintf(stderr, "Out of memory.\n");
 }

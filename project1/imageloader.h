@@ -24,4 +24,4 @@ extern void writeData(Image *image);
 // Frees an image and all its associated data
 extern void freeImage(Image *image);
 
-static void allocation_failed();
+void allocation_failed();
