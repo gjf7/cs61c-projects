@@ -26,23 +26,13 @@
 matmul:
 
     # Error checks
-    li t0, 1
-    mv t1 a1
-    li a1, 72
-    blt t1, t0, error
-    blt a2, t0, error
-    bne t1, a2, error
-    
-    li a1, 73
-    blt a4, t0, error
-    blt a5, t0, error
-    bne a4, a5, error
-    
-    li a1, 74
-    bne t1, a4, error
-
+	ble a1, zero, exit_72
+    ble a2, zero, exit_72
+    ble a4, zero, exit_73
+    ble a5, zero, exit_73
+	bne a2, a4, exit_74
     # Prologue
-    addi sp, sp, -36
+    addi sp, sp, -32
     sw s0, 0(sp)
     sw s1, 4(sp)
     sw s2, 8(sp)
@@ -51,65 +41,54 @@ matmul:
     sw s5, 20(sp)
     sw s6, 24(sp)
     sw ra, 28(sp)
-    sw s7, 32(sp)
     mv s0, a0
-    mv s1, a3
-    mv s2, t1       # height
-    mv s3, a2       # width
-    mv s4, a6
-    li s5, 0        # row counter
-    li s6, 0        # column counter
-
-
-
+    mv s1, a1
+    mv s2, a2
+    mv s3, a3
+    mv s4, a4
+    mv s5, a5
+    mv s6, a6
+    
+	# init
+    li t0, 0 # i = 0
+ebreak
 outer_loop_start:
-    bge s5, s2, outer_loop_end
-    mul s7, s5, s3
-    slli s7, s7, 2
-    add s7, s7, s0
-
-
-
+	li t1, 0 # j = 0
 inner_loop_start:
-    bge s6, s3, inner_loop_end
-    # prepare to call dot
-    mv a0, s7
-    slli t0, s6, 2
-    add a1, s1, t0
-    mv a2 s3
+	mv a0, s0
+    li t2, 4
+    mul t2, t2, t1
+    add a1, s3, t2
+    mv a2, s2
     li a3, 1
-    mv a4, a2
+    mv a4, s5
+    
+    # prologue
+	addi sp, sp, -8
+    sw t0, 0(sp)
+    sw t1, 4(sp)
+    
     jal dot
-    # store answer to d
-    mul t1, s5, s3
-    add t1, t1, s6
-    slli t1, t1, 2
-    add t2, t1, s4
-    sw a0, 0(t2)
-    addi s6, s6, 1
+ebreak
+    sw a0, 0(s6)
+    addi s6, s6, 4
+    
+    # epilogue
+    lw t0, 0(sp)
+    lw t1, 4(sp)
+	addi sp, sp, 8
+    
+    addi t1, t1, 1 # j++
+    beq t1, s5, inner_loop_end
     j inner_loop_start
-
-
-
-
-
-
-
-
-
-
-
-
 inner_loop_end:
-    addi s5, s5, 1
-    mv s6, x0
+	addi t0, t0, 1 # i++
+    beq t0, s1, outer_loop_end
+	li t2, 4
+    mul t2, t2, s2
+    add s0, s0, t2
     j outer_loop_start
-
-
-
-
 outer_loop_end:
-
 
     # Epilogue
     lw s0, 0(sp)
@@ -120,13 +99,15 @@ outer_loop_end:
     lw s5, 20(sp)
     lw s6, 24(sp)
     lw ra, 28(sp)
-    lw s7, 32(sp)
-    addi sp, sp, 36
-    
-    mv a0, x0
-    
+    addi sp, sp, 32
     ret
 
-error:
-    li a0, 17
-    ecall
+exit_72:
+    li a1, 72
+    j exit2
+exit_73:
+	li a1, 73
+    j exit2
+exit_74:
+	li a1, 74
+    j exit2
